@@ -3,13 +3,59 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using System.IO;
 namespace cal_cmd
 {
     class Program
     {
         static void Main(string[] args)
         {
+            Control control = new Control();
+            control.ControlCore(args);
+        }
+        public Program()
+        {
+        }
+    }
+    class Control
+    {
+        private int num = 0;
+        public void ControlCore(string[] args)
+        {
+            if (args.Length == 3 && args[0] == "-g")
+            {
+                if (CheckNum(args[1]))
+                {
+                    num = int.Parse(args[1]);
+                }
+                else
+                {
+                    System.Console.WriteLine("Please input a positive integer");
+                }
+                FileStream output = new FileStream(args[2], FileMode.Create);
+                StreamWriter write = new StreamWriter(output);
+                ProblemSet problem_set = new ProblemSet();
+                problem_set.Generate(num);
+                foreach (Problem cur in problem_set.Get())
+                {
+                    write.Write(cur.Get());
+                    write.Write("\n");
+                    write.Flush();
+                }
+                write.Close();
+                output.Close();
+            }
+        }
+        public bool CheckNum(string num)
+        {
+            for (int i = 0; i < num.Length; i++)
+            {
+                if (num[i] > '9' || num[i] < '0')
+                {
+                    return false;
+                }
+            }
+            return true;
         }
     }
     class Problem
@@ -23,9 +69,86 @@ namespace cal_cmd
     class ProblemSet
     {
         private List<Problem> problem_set;
-        public ProblemSet() { problem_set = new List<Problem>(); }
-        public void Generate(int n) { }
+        private class BracketPos
+        {
+            public int left = 0;
+            public int right = 0;
+        }
+        private BracketPos[] bracket_pos = new BracketPos[10];
+        static Dictionary<int, char> dic_op = new Dictionary<int, char>();
+        Random rd = new Random();
+        public ProblemSet()
+        {
+            problem_set = new List<Problem>();
+
+            dic_op.Add(1, '+');
+            dic_op.Add(2, '-');
+            dic_op.Add(3, '*');
+            dic_op.Add(4, '/');
+            dic_op.Add(5, '^');
+
+            for(int i = 0; i < 10; i++)
+            {
+                bracket_pos[i] = new BracketPos();
+            }
+        }
+        public void Generate(int n)
+        {
+            for(int i = 0; i < n; i++)
+            {
+                GenerateSingle();
+            }
+        }
         public List<Problem> Get() { return problem_set; }
+        public void GenerateSingle()
+        {
+            int cnt_num = rd.Next(2, 10);
+            int cnt_bracket = rd.Next(1, 4);
+            for(int i=0;i<cnt_bracket;i++)
+            {
+                bracket_pos[i].left = rd.Next(0, cnt_num - 1);
+                bracket_pos[i].right = rd.Next(bracket_pos[i].left, cnt_num);
+            }
+            StringBuilder exp = new StringBuilder();
+            for(int i=0;i<cnt_num;i++)
+            { 
+                for(int j = 0; j < cnt_bracket; j++)
+                {
+                    if (bracket_pos[j].left == i)
+                    {
+                        exp.Append("(");
+                    }
+                }
+                int cur_num = rd.Next(1, 101);
+                int op_num = rd.Next(1, 6);
+                exp.Append(cur_num.ToString());
+                for (int j = 0; j < cnt_bracket; j++)
+                {
+                    if (bracket_pos[j].right == i)
+                    {
+                        exp.Append(")");
+                    }
+                }
+                if (i == cnt_num - 1) break;
+                if (op_num == 5)
+                {
+                    if (rd.Next(0, 2) == 0)
+                    {
+                        exp.Append("**");
+                    }
+                    else
+                    {
+                        exp.Append("^");
+                    }
+                }
+                else
+                {
+                    exp.Append(dic_op[op_num]);
+                }
+            }
+            Problem new_proble = new Problem(exp.ToString());
+            problem_set.Add(new_proble);
+        }
     }
     class Solve
     {
@@ -37,14 +160,17 @@ namespace cal_cmd
             public int denominator = 1;
         }
         private Queue<UniType> postfix_exp;
-        private UniType res;
+        private string res;
         private char[] exp;
+        private int length;
         static Dictionary<char, int> dic_pri;
         public Solve()
         {
             postfix_exp = new Queue<UniType>();
             dic_pri = new Dictionary<char, int>();
             exp = new char[100];
+            length = 0;
+            res = "";
 
             dic_pri.Add('(', 0);
             dic_pri.Add('+', 1);
@@ -56,9 +182,11 @@ namespace cal_cmd
             dic_pri.Add('m', 4);
             dic_pri.Add(')', 5);
         }
-        public void Cal(string tosolve)
+        public void CalCore(string tosolve)
         {
             PreTreat(tosolve);
+            InfixToPostfix();
+            CalPost();
         }
         public void PreTreat(string init_exp)
         {
@@ -75,29 +203,34 @@ namespace cal_cmd
                     {
                         exp[idx_exp++] = 'm';
                     }
-                }
-                else
-                {
-                    exp[idx_exp++] = '-';
+                    else
+                    {
+                        exp[idx_exp++] = '-';
+                    }
+                    continue;
                 }
                 if (init_exp[i] == '*')
                 {
                     if (init_exp[i + 1] == '*')
                     {
                         exp[idx_exp++] = '^';
+                        i++;
                     }
                     else
                     {
                         exp[idx_exp++] = '*';
                     }
+                    continue;
                 }
+                exp[idx_exp++] = init_exp[i];
             }
+            length = idx_exp;
         }
         public void InfixToPostfix()
         {
             int idx = 0;
             Stack<UniType> op_sign = new Stack<UniType>();
-            while (idx < exp.Length)
+            while (idx < length)
             {
                 if (exp[idx] > '9' || exp[idx] < '0')
                 {
@@ -107,10 +240,13 @@ namespace cal_cmd
 
                     while (true)
                     {
-                        if (op_sign.Count != 0 || exp[idx] == '^' && exp[idx + 1] == '^')
+                        if (exp[idx] == '^')
                         {
-                            op_sign.Push(cur);
-                            break;
+                            if (op_sign.Count == 0 || dic_pri[exp[idx]] >= dic_pri[op_sign.Peek().op])
+                            {
+                                op_sign.Push(cur);
+                                break;
+                            } 
                         }
                         if (exp[idx] == ')')
                         {
@@ -119,6 +255,7 @@ namespace cal_cmd
                                 postfix_exp.Enqueue(op_sign.Peek());
                                 op_sign.Pop();
                             }
+                            op_sign.Pop();
                             break;
                         }
                         if (op_sign.Count == 0 ||
@@ -172,13 +309,10 @@ namespace cal_cmd
                 if (postfix_exp.Peek().type == 0)
                 {
                     st_cal.Push(postfix_exp.Peek());
-                    postfix_exp.Dequeue();
                 }
                 else if (postfix_exp.Peek().type == 1 && postfix_exp.Peek().op == 'm')
                 {
-                    UniType num1 = st_cal.Peek();
-                    st_cal.Pop();
-                    st_cal.Push(Minus(num1));
+                    st_cal.Peek().numerator *= -1;
                 }
                 else
                 {
@@ -186,23 +320,48 @@ namespace cal_cmd
                     st_cal.Pop();
                     UniType num1 = st_cal.Peek();
                     st_cal.Pop();
-                    switch (postfix_exp.Peek().op)
-                    {
-                        case '+': st_cal.Push(Add(num1, num2)); break;
-                        case '-': st_cal.Push(Sub(num1, num2)); break;
-                        case '*': st_cal.Push(Mul(num1, num2)); break;
-                        case '/': st_cal.Push(Div(num1, num2)); break;
-                        case '^': st_cal.Push(Pow(num1, num2)); break;
-                    }
+                    st_cal.Push(Cal(num1, num2, postfix_exp.Peek().op));
                 }
+                postfix_exp.Dequeue();
             }
+            if (st_cal.Peek().denominator == 1)
+            {
+                res = st_cal.Peek().numerator.ToString();
+            }
+            else
+            {
+                res = st_cal.Peek().numerator.ToString() + "/" + st_cal.Peek().denominator.ToString();
+            }
+            st_cal.Pop();
         }
-        public UniType Add(UniType num1, UniType num2)
+        public UniType Cal(UniType num1, UniType num2,char op)
         {
-            int sum_numerator;
-            int sum_denominator;
-            sum_denominator = num1.denominator * num2.denominator;
-            sum_numerator = num1.numerator * num2.denominator + num2.numerator * num1.denominator;
+            int sum_numerator = 1;
+            int sum_denominator = 1;
+            switch(op)
+            {
+                case '+':
+                    sum_denominator = num1.denominator * num2.denominator;
+                    sum_numerator = num1.numerator * num2.denominator + num2.numerator * num1.denominator;
+                    break;
+                case '-':
+                    sum_denominator = num1.denominator * num2.denominator;
+                    sum_numerator = num1.numerator * num2.denominator - num2.numerator * num1.denominator;
+                    break;
+                case '*':
+                    sum_denominator = num1.denominator * num2.denominator;
+                    sum_numerator = num1.numerator * num2.numerator;
+                    break;
+                case '/':
+                    sum_denominator = num1.denominator * num2.numerator;
+                    sum_numerator = num1.numerator * num2.denominator;
+                    break;
+                case '^':
+                    sum_denominator = MyPow(num1.denominator, num2.numerator);
+                    sum_numerator = MyPow(num1.numerator, num2.numerator);
+                    break; 
+                    
+            }
             int max_gcd = gcd(Math.Max(Math.Abs(sum_denominator), Math.Abs(sum_numerator)),
                               Math.Min(Math.Abs(sum_denominator), Math.Abs(sum_numerator)));
             if (max_gcd != 1)
@@ -216,44 +375,22 @@ namespace cal_cmd
             cur.denominator = sum_denominator;
             return cur;
         }
-        public UniType Sub(UniType num1, UniType num2)
+        public int MyPow(int a,int b)
         {
-            int sum_numerator;
-            int sum_denominator;
-            sum_denominator = num1.denominator * num2.denominator;
-            sum_numerator = num1.numerator * num2.denominator - num2.numerator * num1.denominator;
-            int max_gcd = gcd(Math.Max(Math.Abs(sum_denominator), Math.Abs(sum_numerator)),
-                              Math.Min(Math.Abs(sum_denominator), Math.Abs(sum_numerator)));
-            if (max_gcd != 1)
+            int res = 1;
+            for(int i = 0; i < b; i++)
             {
-                sum_numerator /= max_gcd;
-                sum_denominator /= max_gcd;
+                res *= a;
             }
-            UniType cur = new UniType();
-            cur.type = 0;
-            cur.numerator = sum_numerator;
-            cur.denominator = sum_denominator;
-            return cur;
+            return res;
         }
-        public UniType Mul(UniType num1, UniType num2)
+        public bool check(string user_res)
         {
-            int sum_numerator;
-            int sum_denominator;
-            sum_numerator = num1.numerator * num2.numerator;
-            sum_denominator = num1.denominator * num2.denominator;
-            int max_gcd = gcd(Math.Max(Math.Abs(sum_denominator), Math.Abs(sum_numerator)),
-                              Math.Min(Math.Abs(sum_denominator), Math.Abs(sum_numerator)));
-            if (max_gcd != 1)
+            if (res == user_res)
             {
-                sum_numerator /= max_gcd;
-                sum_denominator /= max_gcd;
+                return true;
             }
-            UniType cur = new UniType();
-            cur.type = 0;
-            cur.numerator = sum_numerator;
-            cur.denominator = sum_denominator;
-            return cur;
-
+            return false;
         }
     }
 }

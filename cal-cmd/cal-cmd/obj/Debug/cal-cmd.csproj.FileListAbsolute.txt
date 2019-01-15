@@ -1,1 +1,5 @@
 c:\users\hp\documents\visual studio 2015\Projects\cal-cmd\cal-cmd\bin\Debug\cal-cmd.exe.config
+C:\Users\hp\documents\visual studio 2015\Projects\cal-cmd\cal-cmd\bin\Debug\cal-cmd.exe
+C:\Users\hp\documents\visual studio 2015\Projects\cal-cmd\cal-cmd\bin\Debug\cal-cmd.pdb
+C:\Users\hp\documents\visual studio 2015\Projects\cal-cmd\cal-cmd\obj\Debug\cal-cmd.exe
+C:\Users\hp\documents\visual studio 2015\Projects\cal-cmd\cal-cmd\obj\Debug\cal-cmd.pdb
