@@ -12,9 +12,10 @@ namespace cal_cmd
         {
             Control control = new Control();
             control.ControlCore(args);
-        }
-        public Program()
-        {
+            /*Solve solve = new Solve();
+            solve.CalCore("((25+(46)*86))");
+            System.Console.WriteLine(solve.GetRes());
+            System.Console.WriteLine(solve.Check("3981"));*/
         }
     }
     class Control
@@ -31,6 +32,7 @@ namespace cal_cmd
                 else
                 {
                     System.Console.WriteLine("Please input a positive integer");
+                    return;
                 }
                 FileStream output = new FileStream(args[2], FileMode.Create);
                 StreamWriter write = new StreamWriter(output);
@@ -44,6 +46,41 @@ namespace cal_cmd
                 }
                 write.Close();
                 output.Close();
+            }
+            else if (args.Length == 2 && args[0] == "-s")
+            {
+                int right_cnt = 0;
+                if (CheckNum(args[1]))
+                {
+                    num = int.Parse(args[1]);
+                }
+                else
+                {
+                    System.Console.WriteLine("Please input a positive integer");
+                    return;
+                }
+                ProblemSet problem_set = new ProblemSet();
+                problem_set.Generate(num);
+                Solve solve = new Solve();
+                foreach(Problem cur in problem_set.Get())
+                {
+                    System.Console.WriteLine(cur.Get());
+                    string res = System.Console.ReadLine();
+                    solve.CalCore(cur.Get());
+                    System.Console.WriteLine("my answer " + res);
+                    if (solve.Check(res))
+                    {
+                       System.Console.WriteLine("正确");
+                       right_cnt++;
+                    }
+                    else
+                    {
+                        System.Console.WriteLine("错误");
+                        System.Console.WriteLine(solve.GetRes());
+
+                    }
+                }
+                System.Console.WriteLine("您的成绩为:" + right_cnt.ToString());
             }
         }
         public bool CheckNum(string num)
@@ -181,6 +218,10 @@ namespace cal_cmd
             dic_pri.Add('p', 3);
             dic_pri.Add('m', 4);
             dic_pri.Add(')', 5);
+        }
+        public string GetRes()
+        {
+            return res;
         }
         public void CalCore(string tosolve)
         {
@@ -384,7 +425,7 @@ namespace cal_cmd
             }
             return res;
         }
-        public bool check(string user_res)
+        public bool Check(string user_res)
         {
             if (res == user_res)
             {
