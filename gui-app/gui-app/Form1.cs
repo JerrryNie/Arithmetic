@@ -16,7 +16,9 @@ namespace gui_app
         public Form1()
         {
             InitializeComponent();
-            String Str = "Hp * hp + hp ** hp";
+
+            GenerateProbSignal(ProbNum);//Controller部分的接口，用于向逻辑部分发送生成特定题目数量的要求
+            String Str = "心痛到无法呼吸";
             QuestionText.Text = Str;
             //计时器属性初始化
             timer1.Interval = 1000;//每隔1m，触发一次ticker函数
@@ -27,17 +29,29 @@ namespace gui_app
             ConfirmAnsButton.Visible = false;
         }
 
+        const int ProbNum = 1000;//默认产生1000道题，并通过逻辑部分写入文件
+
         private const int MaxThinkTime = 10;
         private int Timecnt = 0;//用来记录做题总时间
         private int QuesCnt = 0;//用来记录总的答题数
         private int CorrectNum = 0;//用来记录总的对题数
+        private RecordSet UserRecords = new RecordSet();//新建立一个数据集，记录历史记录信息
+        public RecordSet UserRecords_r
+        {
+            get
+            {
+                return UserRecords;
+            }
+        }
+
         
         private void StartButton_Click(object sender, EventArgs e)
         {
             
             timer1.Enabled = true;
             timer2.Enabled = true;
-            
+            String ProbStr = GetProblem();//接口，从Controller那里得到一道题目（注意，仅仅是题目，答案的正误在Send函数中确认）
+            QuestionText.Text = ProbStr;
             StartButton.Visible = false;//隐藏此按键
             FinishButton.Visible = true;//显示此按键
             ConfirmAnsButton.Visible = true;
@@ -48,8 +62,7 @@ namespace gui_app
         {
             //Step2.1
             //这个控件中显示相应的题目，并不允许用户对这个控件的属性进行修改，
-            String Str = "Hp * hp + hp ** hp";
-            QuestionText.Text = Str;
+            
         }
 
         private void CountDown_TextChanged(object sender, EventArgs e)
@@ -70,7 +83,14 @@ namespace gui_app
             StartButton.Visible = true;
             ConfirmAnsButton.Visible = false;
             String Str = "总答题数："+ QuesCnt + "; 正确题数："+ CorrectNum;
-            MessageBox.Show(Str);//显示最终的答题情况
+            DialogResult result = MessageBox.Show(Str);//显示最终的答题情况
+            if (result == DialogResult.OK)
+            {
+                var HistoryFormObj = new HistoryForm(this, UserRecords.RecordNum);//建立显示历史记录的子窗口对象,并把当前对象传给子对象
+                this.Hide();//隐藏主窗口
+                HistoryFormObj.Show();//显示子窗口
+            }
+
         }
 
         private void timer1_Tick(object sender, EventArgs e)
@@ -88,24 +108,50 @@ namespace gui_app
             if(CountDownCnt <= 0)
             {//当倒计时结束后，给Controller发出错误信息，并初始化倒计时器
 
-                timer2.Enabled = false;//当倒计时结束后 ，计时器的计时将暂停，此函数将不再被调用
-                const int ErrorAns = -1;//设置一个恒为错误值的数字，用来表示当倒计时结束时的答案输出
-                bool status = Send(ErrorAns);//发送错误答案给Controller
+                timer2.Stop();//当倒计时结束后 ，计时器的计时将暂停，此函数将不再被调用
+                timer1.Stop();
+                /*timer2.Enabled = false;
+                timer1.Enabled = false;
+                */const int ErrorAns = -1;//设置一个恒为错误值的数字，用来表示当倒计时结束时的答案输出
+                String standAns = "";
+                bool status = Send(ErrorAns, true, ref standAns);//发送错误答案给Controller
                 status = false;//将本次答题结果恒置为false, 表示错误
                 QuesCnt++;//总答题数+1
                 DialogResult result = MessageBox.Show("本题的答题时间已到！", "Warning", MessageBoxButtons.OKCancel);
                 if (result == DialogResult.OK)
                 {
-                    timer2.Enabled = true;//开启计时器的计时功能
+                    timer2.Start();//开启计时器的计时功能
+                    timer1.Start();
                 }
+
+                UserRecords.CreateNewRecord(DateTime.Now.ToString(), QuestionText.Text, "", standAns, status);
+                //记录本次答题情况
+
+                String ProbStr = GetProblem();//接口
+                QuestionText.Text = ProbStr;//更新题目
                 //初始化倒计时
                 CountDownCnt = MaxThinkTime;
 
+
             }
         }
-        private bool Send(double Ans)
+        private bool Send(double Ans, bool errorStatus, ref String standAns)
         {//暂时没有加入Controller，恒返回1，表示答案正确
-            return true;
+            bool Status = 
+                controller.Controller.GetInstance().SendAnsGUI2Controller(Ans, errorStatus, ref standAns);
+            //errorStatus用来表示此次答题是否是超时的
+            //如果超时，则为true，此时逻辑部分给出的反馈也应该是false，表示答案错误
+            return Status;
+        }
+
+        private String GetProblem()
+        {//仅仅用来封装GUI从Controller接收消息的接口
+            String Str = controller.Controller.GetInstance().GetProblemController2GUI();
+            return Str;
+        }
+        private void GenerateProbSignal(int ProbNum)
+        {//仅仅用来封装GUI向Controller发送生成新题目的接口
+            controller.Controller.GetInstance().GenerateProblemGUI2Controller(ProbNum);
         }
 
         private void ConfirmAnsButton_Click(object sender, EventArgs e)
@@ -113,6 +159,7 @@ namespace gui_app
 
             String AnsStr = AnsText.Text;
             int Ans = 0;
+            //String ansStr = "";
             try
             {
                 Ans = Convert.ToInt32(AnsStr);
@@ -123,15 +170,20 @@ namespace gui_app
             {
                 Console.WriteLine("{0} is outside the range of the Int32 type.", AnsStr);
                 MessageBox.Show("答案输入格式错误！");
+                return;//不合法输入，直接返回
             }
             catch (FormatException)
             {
                 Console.WriteLine("The {0} value '{1}' is not in a recognizable format.",
                                   AnsStr.GetType().Name, AnsStr);
                 MessageBox.Show("答案输入格式错误！");
+                return;//不合法输入，直接返回
             }
-            
-            bool Status = Send(Ans);//将答案发送给Controller
+            timer1.Stop();
+            timer2.Stop();
+
+            String standAns = "";//用来存放从Controller中取回的标准答案
+            bool Status = Send(Ans, false, ref standAns);//将答案发送给Controller
             if (Status == true) 
             {
                 CorrectNum++;   //答对题目总数增加
@@ -142,7 +194,25 @@ namespace gui_app
                 MessageBox.Show("答案错误！");
             }
             QuesCnt++;          //总题数增加
+
+            //记录本次答题情况
+            UserRecords.CreateNewRecord(DateTime.Now.ToString(), QuestionText.Text, AnsStr, standAns, Status);
+            
+            String ProbStr = GetProblem();//接口
+            QuestionText.Text = ProbStr;//更新题目
             CountDownCnt = MaxThinkTime;//初始化倒计时
+            timer1.Start();
+            timer2.Start();
+        }
+
+        private void Form1_MouseMove(object sender, MouseEventArgs e)
+        {
+
+        }
+        public Record getRecord(int idx)
+        {//接口方法：用于在主界面类与历史记录界面类之间传递单条历史记录，从历史记录类中提供单条历史记录，此方法返回相应的记录
+            Record r = UserRecords.Records_r[idx];
+            return r;
         }
     }
 }

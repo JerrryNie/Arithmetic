@@ -193,6 +193,7 @@
             this.Controls.Add(this.StartButton);
             this.Name = "Form1";
             this.Text = "Form1";
+            this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.Form1_MouseMove);
             this.ResumeLayout(false);
             this.PerformLayout();
 
