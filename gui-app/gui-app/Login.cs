@@ -56,6 +56,7 @@ namespace gui_app
             //var Form1Obj = MultiFormApplicationStart.getInstance().CreateMain(userName);//建立显示历史记录的子窗口对象,并把当前对象传给子对象
             this.Hide();//关闭登录窗口
             //MultiFormApplicationStart.addFormObj(Form1Obj);//将主窗口添加进窗口管理类中
+            Form1Obj.setUsrName(userName);
             Form1Obj.Show();//显示主窗口
             
         }

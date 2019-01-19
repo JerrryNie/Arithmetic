@@ -190,7 +190,6 @@
             this.textBox3.PasswordChar = '*';
             this.textBox3.Size = new System.Drawing.Size(725, 61);
             this.textBox3.TabIndex = 0;
-            this.textBox3.UseSystemPasswordChar = true;
             this.textBox3.TextChanged += new System.EventHandler(this.textBox3_TextChanged);
             // 
             // button2
