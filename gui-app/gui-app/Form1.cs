@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Threading;
+using System.Text.RegularExpressions;
 
 namespace gui_app
 {
@@ -31,7 +32,7 @@ namespace gui_app
 
         const int ProbNum = 1000;//默认产生1000道题，并通过逻辑部分写入文件
 
-        private const int MaxThinkTime = 10;
+        private const int MaxThinkTime = 20;//做题的最大时间限
         private int Timecnt = 0;//用来记录做题总时间
         private int QuesCnt = 0;//用来记录总的答题数
         private int CorrectNum = 0;//用来记录总的对题数
@@ -50,12 +51,14 @@ namespace gui_app
             
             timer1.Enabled = true;
             timer2.Enabled = true;
-            String ProbStr = GetProblem();//接口，从Controller那里得到一道题目（注意，仅仅是题目，答案的正误在Send函数中确认）
+            int probNum = 0;
+            String ProbStr = GetProblem(ref probNum);//接口，从Controller那里得到一道题目（注意，仅仅是题目，答案的正误在Send函数中确认）
             QuestionText.Text = ProbStr;
+            QuesNum.Text = probNum.ToString();
             StartButton.Visible = false;//隐藏此按键
             FinishButton.Visible = true;//显示此按键
             ConfirmAnsButton.Visible = true;
-
+            //CountDown.ForeColor = Color.Red;//****************
         }
 
         private void QuestionText_TextChanged(object sender, EventArgs e)
@@ -105,6 +108,15 @@ namespace gui_app
             CountDownCnt--;
             String Str = CountDownCnt.ToString();
             CountDown.Text = Str + "秒";
+            CountDown.ForeColor = Color.Red;
+            if(CountDownCnt <= 5)
+            {
+                CountDown.ForeColor = Color.Red;//倒计时剩余5秒的时候，颜色转变为红色
+            }
+            else
+            {
+                CountDown.ForeColor = Color.Black;//其他时候都是黑色
+            }
             if(CountDownCnt <= 0)
             {//当倒计时结束后，给Controller发出错误信息，并初始化倒计时器
 
@@ -112,9 +124,9 @@ namespace gui_app
                 timer1.Stop();
                 /*timer2.Enabled = false;
                 timer1.Enabled = false;
-                */const int ErrorAns = -1;//设置一个恒为错误值的数字，用来表示当倒计时结束时的答案输出
+                *///const int ErrorAns = -1;//设置一个恒为错误值的数字，用来表示当倒计时结束时的答案输出
                 String standAns = "";
-                bool status = Send(ErrorAns, true, ref standAns);//发送错误答案给Controller
+                bool status = Send("", true, ref standAns);//发送错误答案给Controller
                 status = false;//将本次答题结果恒置为false, 表示错误
                 QuesCnt++;//总答题数+1
                 DialogResult result = MessageBox.Show("本题的答题时间已到！", "Warning", MessageBoxButtons.OKCancel);
@@ -124,18 +136,19 @@ namespace gui_app
                     timer1.Start();
                 }
 
-                UserRecords.CreateNewRecord(DateTime.Now.ToString(), QuestionText.Text, "", standAns, status);
+                UserRecords.CreateNewRecord(DateTime.Now.ToString(), QuestionText.Text, "超时", standAns, status);
                 //记录本次答题情况
-
-                String ProbStr = GetProblem();//接口
+                int probNum = 0;
+                String ProbStr = GetProblem(ref probNum);//接口
                 QuestionText.Text = ProbStr;//更新题目
+                QuesNum.Text = probNum.ToString();
                 //初始化倒计时
                 CountDownCnt = MaxThinkTime;
 
 
             }
         }
-        private bool Send(double Ans, bool errorStatus, ref String standAns)
+        private bool Send(String Ans, bool errorStatus, ref String standAns)
         {//暂时没有加入Controller，恒返回1，表示答案正确
             bool Status = 
                 controller.Controller.GetInstance().SendAnsGUI2Controller(Ans, errorStatus, ref standAns);
@@ -144,9 +157,9 @@ namespace gui_app
             return Status;
         }
 
-        private String GetProblem()
+        private String GetProblem(ref int probNum)
         {//仅仅用来封装GUI从Controller接收消息的接口
-            String Str = controller.Controller.GetInstance().GetProblemController2GUI();
+            String Str = controller.Controller.GetInstance().GetProblemController2GUI(ref probNum);
             return Str;
         }
         private void GenerateProbSignal(int ProbNum)
@@ -160,30 +173,62 @@ namespace gui_app
             String AnsStr = AnsText.Text;
             int Ans = 0;
             //String ansStr = "";
-            try
+            //bool flag = false;//true: 遇到斜杠
+            int idx = -1;//斜杠的位置
+            for(int i = 0; i < AnsStr.Length; i++)
             {
-                Ans = Convert.ToInt32(AnsStr);
-                Console.WriteLine("Converted the {0} value '{1}' to the {2} value {3}.",
-                                  AnsStr.GetType().Name, AnsStr, Ans.GetType().Name, Ans);
+                if(AnsStr[i] == '/')
+                {//检测出现分数的情况
+                    idx = i;
+                    
+                    break;
+                }
             }
-            catch (OverflowException)
+            List<String> numToProcess = new List<String>();
+            if (idx == -1)
             {
-                Console.WriteLine("{0} is outside the range of the Int32 type.", AnsStr);
-                MessageBox.Show("答案输入格式错误！");
-                return;//不合法输入，直接返回
+                numToProcess.Add(AnsStr);
             }
-            catch (FormatException)
+            else
             {
-                Console.WriteLine("The {0} value '{1}' is not in a recognizable format.",
-                                  AnsStr.GetType().Name, AnsStr);
-                MessageBox.Show("答案输入格式错误！");
-                return;//不合法输入，直接返回
+                String denominator = AnsStr.Split(new char[] { '/' })[0];
+                String numerator = AnsStr.Split(new char[] { '/' })[1];
+                if((AnsStr.Split(new char[] { '/' })).Length != 2)
+                {
+                    MessageBox.Show("答案输入格式错误！");
+                    return;//不合法输入，直接返回
+                }
+                numToProcess.Add(denominator);
+                numToProcess.Add(numerator);
             }
+                foreach(String tmpAnsStr in numToProcess)
+            {//检查每一个数的合法性
+                try
+                {
+                    Ans = Convert.ToInt32(tmpAnsStr);
+                    Console.WriteLine("Converted the {0} value '{1}' to the {2} value {3}.",
+                                      tmpAnsStr.GetType().Name, tmpAnsStr, Ans.GetType().Name, Ans);
+                }
+                catch (OverflowException)
+                {
+                    Console.WriteLine("{0} is outside the range of the Int32 type.", tmpAnsStr);
+                    MessageBox.Show("答案输入格式错误！");
+                    return;//不合法输入，直接返回
+                }
+                catch (FormatException)
+                {
+                    Console.WriteLine("The {0} value '{1}' is not in a recognizable format.",
+                                      tmpAnsStr.GetType().Name, tmpAnsStr);
+                    MessageBox.Show("答案输入格式错误！");
+                    return;//不合法输入，直接返回
+                }
+            }
+            
             timer1.Stop();
             timer2.Stop();
 
             String standAns = "";//用来存放从Controller中取回的标准答案
-            bool Status = Send(Ans, false, ref standAns);//将答案发送给Controller
+            bool Status = Send(AnsStr, false, ref standAns);//将答案发送给Controller
             if (Status == true) 
             {
                 CorrectNum++;   //答对题目总数增加
@@ -197,10 +242,12 @@ namespace gui_app
 
             //记录本次答题情况
             UserRecords.CreateNewRecord(DateTime.Now.ToString(), QuestionText.Text, AnsStr, standAns, Status);
-            
-            String ProbStr = GetProblem();//接口
+            int probNum = 0;
+            String ProbStr = GetProblem(ref probNum);//接口
             QuestionText.Text = ProbStr;//更新题目
+            QuesNum.Text = probNum.ToString();
             CountDownCnt = MaxThinkTime;//初始化倒计时
+            
             timer1.Start();
             timer2.Start();
         }

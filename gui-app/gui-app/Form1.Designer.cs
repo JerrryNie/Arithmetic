@@ -65,6 +65,8 @@
             // 
             // CountDown
             // 
+            this.CountDown.BackColor = System.Drawing.SystemColors.Control;
+            this.CountDown.ForeColor = System.Drawing.SystemColors.WindowText;
             this.CountDown.Location = new System.Drawing.Point(69, 61);
             this.CountDown.Name = "CountDown";
             this.CountDown.ReadOnly = true;
@@ -105,6 +107,7 @@
             this.QuesNum.BackColor = System.Drawing.SystemColors.Control;
             this.QuesNum.Location = new System.Drawing.Point(69, 166);
             this.QuesNum.Name = "QuesNum";
+            this.QuesNum.ReadOnly = true;
             this.QuesNum.Size = new System.Drawing.Size(100, 25);
             this.QuesNum.TabIndex = 6;
             // 
