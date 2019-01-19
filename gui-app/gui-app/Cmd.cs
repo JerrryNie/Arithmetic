@@ -4,89 +4,101 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
-
 namespace cal_cmd
 {
-    class Cmd
+    /*class Program
     {
-        Cmd(string[] args)
-        {//命令行程序的入口，由原来的Program类改写
+        static void Main(string[] args)
+        {
             Control control = new Control();
             control.ControlCore(args);
-            /*Solve solve = new Solve();
-            solve.CalCore("((25+(46)*86))");
-            System.Console.WriteLine(solve.GetRes());
-            System.Console.WriteLine(solve.Check("3981"));*/
+            //Solve solve = new Solve();
+            //solve.CalCore("((100)+29)");
+            //System.Console.WriteLine(solve.GetRes());
+            //System.Console.WriteLine(solve.Check("129"));
+            //solve.CalCore("(17)/52");
+            //System.Console.WriteLine(solve.GetRes());
+            //System.Console.WriteLine(solve.Check("17/52"));
+            //ProblemSet set = new ProblemSet();
+            //set.Generate(1000);
         }
-        Cmd()
-        {//GUI程序的入口
-            Control control = new Control();
-
-        }
-    }
-    class Control
+    }*/
+    public class Control
     {
         private int num = 0;
+        private int error_flag = 0;
+        private int pow_type = 0;
+        public int GetError() { return error_flag; }
         public void ControlCore(string[] args)
         {
-            if (args.Length == 3 && args[0] == "-g")
+            if (args.Length == 4 && args[0] == "-g")
             {
-                if (CheckNum(args[1]))
+                if (!CheckArg(args))
                 {
-                    num = int.Parse(args[1]);
-                }
-                else
-                {
-                    System.Console.WriteLine("Please input a positive integer");
                     return;
                 }
-                FileStream output = new FileStream(args[2], FileMode.Create);
-                StreamWriter write = new StreamWriter(output);
-                ProblemSet problem_set = new ProblemSet();
-                problem_set.Generate(num);
-                foreach (Problem cur in problem_set.Get())
+                FileStream output;
+                StreamWriter write;
+                try
                 {
-                    write.Write(cur.Get());
-                    write.Write("\n");
-                    write.Flush();
+                    output = new FileStream(args[2], FileMode.Create);
+                    write = new StreamWriter(output);
+                    ProblemSet problem_set = new ProblemSet();
+                    problem_set.SetPowType(pow_type);
+                    problem_set.Generate(num);
+                    foreach (Problem cur in problem_set.Get())
+                    {
+                        write.Write(cur.Get());
+                        write.Write("\r\n");
+                        write.Flush();
+                    }
+                    write.Close();
+                    output.Close();
                 }
-                write.Close();
-                output.Close();
+                catch(IOException e)
+                {
+                    System.Console.WriteLine(e.ToString());
+                    error_flag = 2;
+                }
+
             }
-            else if (args.Length == 2 && args[0] == "-s")
+            else if (args.Length == 3 && args[0] == "-s")
             {
                 int right_cnt = 0;
-                if (CheckNum(args[1]))
+                if (!CheckArg(args))
                 {
-                    num = int.Parse(args[1]);
-                }
-                else
-                {
-                    System.Console.WriteLine("Please input a positive integer");
                     return;
                 }
                 ProblemSet problem_set = new ProblemSet();
+                problem_set.SetPowType(pow_type);
                 problem_set.Generate(num);
                 Solve solve = new Solve();
-                foreach (Problem cur in problem_set.Get())
+                foreach(Problem cur in problem_set.Get())
                 {
                     System.Console.WriteLine(cur.Get());
                     string res = System.Console.ReadLine();
                     solve.CalCore(cur.Get());
-                    System.Console.WriteLine("my answer " + res);
+                    System.Console.WriteLine("my answer :" + res);
                     if (solve.Check(res))
                     {
-                        System.Console.WriteLine("正确");
-                        right_cnt++;
+                       System.Console.WriteLine("正确");
+                       right_cnt++;
                     }
                     else
                     {
                         System.Console.WriteLine("错误");
-                        System.Console.WriteLine(solve.GetRes());
+                        System.Console.WriteLine("正确答案是："+solve.GetRes());
 
                     }
                 }
-                System.Console.WriteLine("您的成绩为:" + right_cnt.ToString());
+                System.Console.WriteLine("您的成绩为:");
+                System.Console.WriteLine("答对题目：" + right_cnt.ToString() + "道");
+                System.Console.WriteLine("答错题目：" + (num-right_cnt).ToString() + "道");
+            }
+            else
+            {
+                error_flag = 4;
+                System.Console.WriteLine("参数存在未知错误");
             }
         }
         public bool CheckNum(string num)
@@ -100,8 +112,42 @@ namespace cal_cmd
             }
             return true;
         }
+        public bool CheckArg(string[] args)
+        {
+            if (CheckNum(args[1]))
+            {
+                num = int.Parse(args[1]);
+            }
+            else
+            {
+                error_flag = 1;
+                System.Console.WriteLine("Please input a positive integer");
+                return false;
+            }
+            if (args.Length==4&&CheckNum(args[3]))
+            {
+                pow_type = int.Parse(args[3]);
+            }
+            else if (args.Length == 3 && CheckNum(args[2]))
+            {
+                pow_type = int.Parse(args[2]);
+            }
+            else
+            {
+                error_flag = 3;
+                System.Console.WriteLine("Pow type iserror");
+                return false;
+            }
+            if(pow_type>1)
+            {
+                error_flag = 3;
+                System.Console.WriteLine("Pow type iserror");
+                return false;
+            }
+            return true;
+        }
     }
-    class Problem
+    public class Problem
     {
         private string expression;
         public string Get() { return expression; }
@@ -109,20 +155,36 @@ namespace cal_cmd
         public Problem() { expression = ""; }
         public Problem(string res_exp) { expression = res_exp; }
     }
-    class ProblemSet
+    public class ProblemSet
     {
         private List<Problem> problem_set;
         private class BracketPos
         {
             public int left = 0;
             public int right = 0;
+            public bool l_legal = true;
+            public bool r_legal = true;
         }
-        private BracketPos[] bracket_pos = new BracketPos[10];
-        static Dictionary<int, char> dic_op = new Dictionary<int, char>();
-        Random rd = new Random();
+        private class ExpInf
+        {
+            public int cnt_num = 0;
+            public int[] num_vis = new int[101]; 
+        }
+        private BracketPos[] bracket_pos;
+        private int[] pow_pos = new int[5];
+        static Dictionary<int, char> dic_op;
+        private List<ExpInf> inf_set;
+        private Random rd;
+        private int pow_type;
         public ProblemSet()
         {
             problem_set = new List<Problem>();
+            bracket_pos = new BracketPos[10];
+            pow_pos = new int[5];
+            dic_op = new Dictionary<int, char>();
+            inf_set = new List<ExpInf>();
+            rd = new Random();
+            pow_type = 0;
 
             dic_op.Add(1, '+');
             dic_op.Add(2, '-');
@@ -130,52 +192,73 @@ namespace cal_cmd
             dic_op.Add(4, '/');
             dic_op.Add(5, '^');
 
-            for (int i = 0; i < 10; i++)
+            for(int i = 0; i < 10; i++)
             {
                 bracket_pos[i] = new BracketPos();
             }
         }
+        public void SetPowType(int p_pow_type)
+        {
+            pow_type = p_pow_type;
+        }
         public void Generate(int n)
         {
-            for (int i = 0; i < n; i++)
+            int cnt_problem = 0;
+            while(cnt_problem<n)
             {
-                GenerateSingle();
+                cnt_problem += GenerateSingle();
             }
         }
         public List<Problem> Get() { return problem_set; }
-        public void GenerateSingle()
+        public int GenerateSingle()
         {
-            int cnt_num = rd.Next(2, 10);
-            int cnt_bracket = rd.Next(1, 4);
-            for (int i = 0; i < cnt_bracket; i++)
+            Solve cur_solve = new Solve();
+            ExpInf cur_inf = new ExpInf();
+            int cnt_num = rd.Next(2, 8);
+            cur_inf.cnt_num = cnt_num;
+            int cnt_bracket;
+            if (cnt_num > 2)
             {
-                bracket_pos[i].left = rd.Next(0, cnt_num - 1);
-                bracket_pos[i].right = rd.Next(bracket_pos[i].left, cnt_num);
+                cnt_bracket = rd.Next(1, Math.Min(3, cnt_num));
             }
-            StringBuilder exp = new StringBuilder();
-            for (int i = 0; i < cnt_num; i++)
+            else
             {
-                for (int j = 0; j < cnt_bracket; j++)
+                cnt_bracket = 0;
+            }
+            for(int i=0;i<cnt_bracket;i++)
+            {
+                bracket_pos[i].left = rd.Next(1, cnt_num - 2);
+                bracket_pos[i].right = rd.Next(bracket_pos[i].left + 1, cnt_num);
+                bracket_pos[i].l_legal = true;
+                bracket_pos[i].r_legal = true;
+            }
+            DealBracket(cnt_bracket);
+            StringBuilder exp = new StringBuilder();
+            StringBuilder op = new StringBuilder();
+            for (int j = 0; j < cnt_bracket; j++)
+            {
+                if (bracket_pos[j].left == 0)
                 {
-                    if (bracket_pos[j].left == i)
-                    {
-                        exp.Append("(");
-                    }
+                    exp.Append("(");
                 }
-                int cur_num = rd.Next(1, 101);
+            }
+            int first_num = rd.Next(1, 101);
+            exp.Append(first_num.ToString());
+            cur_inf.num_vis[first_num]++;
+            for (int i=1;i<cnt_num;i++)
+            { 
                 int op_num = rd.Next(1, 6);
-                exp.Append(cur_num.ToString());
-                for (int j = 0; j < cnt_bracket; j++)
+                if (op.Length != 0 && op[op.Length - 1] == '^')
                 {
-                    if (bracket_pos[j].right == i)
+                    while (op_num == 5)
                     {
-                        exp.Append(")");
+                        op_num = rd.Next(1, 6);
                     }
                 }
-                if (i == cnt_num - 1) break;
+                exp.Append(' ');
                 if (op_num == 5)
                 {
-                    if (rd.Next(0, 2) == 0)
+                    if (pow_type == 0)
                     {
                         exp.Append("**");
                     }
@@ -183,17 +266,151 @@ namespace cal_cmd
                     {
                         exp.Append("^");
                     }
+                    op.Append('^');
                 }
                 else
                 {
                     exp.Append(dic_op[op_num]);
+                    op.Append(dic_op[op_num]);
+                }
+                exp.Append(' ');
+                for (int j = 0; j < cnt_bracket; j++)
+                {
+                    if(op[op.Length-1]=='^' && bracket_pos[j].left == i)
+                    {
+                        bracket_pos[j].l_legal = false;
+                        bracket_pos[j].r_legal = false;
+                    }
+                    if (bracket_pos[j].l_legal && bracket_pos[j].left == i)
+                    {
+                        exp.Append("(");
+                    }
+                }
+                int cur_num = 0;
+                switch (op_num)
+                {
+                    case 5: cur_num = rd.Next(2, 4);break;
+                    case 4: cur_num = rd.Next(1, 11);break;
+                    default:cur_num = rd.Next(1, 101);break;
+                }
+                if (op_num == 4 || op_num == 5)
+                {
+                    cur_inf.num_vis[cur_num]++;
+                    exp.Append(cur_num.ToString());
+                }
+                else
+                {
+                    int type = rd.Next(1, 7);
+                    if (type < 3)
+                    {
+                        int de = rd.Next(2, 11);
+                        int ne = rd.Next(1, de);
+                        exp.Append(ne.ToString());
+                        exp.Append('/');
+                        exp.Append(de.ToString());
+                    }
+                    else
+                    {
+                        cur_inf.num_vis[cur_num]++;
+                        exp.Append(cur_num.ToString());
+                    }
+                }
+                for (int j = 0; j < cnt_bracket; j++)
+                {
+                    if (bracket_pos[j].r_legal && bracket_pos[j].right == i)
+                    {
+                        exp.Append(")");
+                    }
                 }
             }
-            Problem new_proble = new Problem(exp.ToString());
-            problem_set.Add(new_proble);
+            System.Console.WriteLine(exp.ToString());
+            cur_solve.CalCore(exp.ToString());
+            System.Console.WriteLine(cur_solve.GetRes());
+            if (CheckDup(cur_inf) || CheckOverflow(cur_solve.GetRes()))
+            {
+                return 0;
+            }
+            else
+            {
+                Problem new_proble = new Problem(exp.ToString());
+                problem_set.Add(new_proble);
+                inf_set.Add(cur_inf);
+                return 1;
+            }
+        }
+        private bool CheckDup(ExpInf cur_inf)
+        {
+            foreach (ExpInf inf in inf_set)
+            {
+                bool flag = true;
+                if (inf.cnt_num != cur_inf.cnt_num)
+                {
+                    continue;
+                }
+                for(int i = 1; i < 101; i++)
+                {
+                    if (cur_inf.num_vis[i] != inf.num_vis[i])
+                    {
+                        flag = false;
+                        break;
+                    }
+                }
+                if (flag)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        public void DealBracket(int cnt_bracket)
+        {
+            for(int i = 0; i < cnt_bracket; i++)
+            {
+                for(int j = i+1; j < cnt_bracket; j++)
+                {
+                    if(bracket_pos[i].left==bracket_pos[j].left&&
+                        bracket_pos[i].right == bracket_pos[j].right)
+                    {
+                        bracket_pos[j].l_legal = false;
+                        bracket_pos[j].r_legal = false;
+                    }
+                }
+            }
+            for (int i = 0; i < cnt_bracket; i++)
+            {
+                for (int j = 0; j < cnt_bracket; j++)
+                {
+                    if (bracket_pos[i].left == bracket_pos[j].right)
+                    {
+                        bracket_pos[i].l_legal = false;
+                        bracket_pos[i].r_legal = false;
+                        bracket_pos[j].l_legal = false;
+                        bracket_pos[j].r_legal = false;
+                    }
+                }
+            }
+        }
+        public bool CheckOverflow(string res)
+        {
+            int div_pos = 0;
+            for(int i = 0; i < res.Length; i++)
+            {
+                if (res[i] == '/')
+                {
+                    div_pos = i;
+                    break;
+                }
+            }
+          
+            if (div_pos > 8 || res.Length - div_pos > 8)
+            {
+                return true;
+            }
+            return false;
+           
         }
     }
-    class Solve
+    public class Solve
     {
         public class UniType
         {
@@ -234,6 +451,7 @@ namespace cal_cmd
             PreTreat(tosolve);
             InfixToPostfix();
             CalPost();
+            Reset();
         }
         public void PreTreat(string init_exp)
         {
@@ -293,7 +511,7 @@ namespace cal_cmd
                             {
                                 op_sign.Push(cur);
                                 break;
-                            }
+                            } 
                         }
                         if (exp[idx] == ')')
                         {
@@ -306,9 +524,9 @@ namespace cal_cmd
                             break;
                         }
                         if (op_sign.Count == 0 ||
-                            dic_pri[exp[idx]] > dic_pri[op_sign.Peek().op] ||
-                            op_sign.Peek().op == '(' ||
-                            exp[idx] == '(')
+                           dic_pri[exp[idx]] > dic_pri[op_sign.Peek().op] ||
+                           op_sign.Peek().op == '(' ||
+                           exp[idx] == '(')
                         {
                             op_sign.Push(cur);
                             break;
@@ -381,11 +599,11 @@ namespace cal_cmd
             }
             st_cal.Pop();
         }
-        public UniType Cal(UniType num1, UniType num2, char op)
+        public UniType Cal(UniType num1, UniType num2,char op)
         {
             int sum_numerator = 1;
             int sum_denominator = 1;
-            switch (op)
+            switch(op)
             {
                 case '+':
                     sum_denominator = num1.denominator * num2.denominator;
@@ -406,11 +624,11 @@ namespace cal_cmd
                 case '^':
                     sum_denominator = MyPow(num1.denominator, num2.numerator);
                     sum_numerator = MyPow(num1.numerator, num2.numerator);
-                    break;
-
+                    break; 
+                    
             }
             int max_gcd = gcd(Math.Max(Math.Abs(sum_denominator), Math.Abs(sum_numerator)),
-                                Math.Min(Math.Abs(sum_denominator), Math.Abs(sum_numerator)));
+                              Math.Min(Math.Abs(sum_denominator), Math.Abs(sum_numerator)));
             if (max_gcd != 1)
             {
                 sum_numerator /= max_gcd;
@@ -422,10 +640,10 @@ namespace cal_cmd
             cur.denominator = sum_denominator;
             return cur;
         }
-        public int MyPow(int a, int b)
+        public int MyPow(int a,int b)
         {
             int res = 1;
-            for (int i = 0; i < b; i++)
+            for(int i = 0; i < b; i++)
             {
                 res *= a;
             }
@@ -439,6 +657,16 @@ namespace cal_cmd
             }
             return false;
         }
+        public void Reset()
+        {
+            for(int i = 0; i < exp.Length; i++)
+            {
+                exp[i] = '\0';
+            }
+            while (postfix_exp.Count != 0)
+            {
+                postfix_exp.Dequeue();
+            }
+        }
     }
 }
-
