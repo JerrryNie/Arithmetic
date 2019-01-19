@@ -115,5 +115,11 @@ namespace UnitTestProject1
             Solve solve = new Solve();
             Assert.AreEqual(1, solve.gcd(15, 7));
         }
+        [TestMethod]
+        public void TestGCD3()
+        {
+            Solve solve = new Solve();
+            Assert.AreEqual(1, solve.gcd(15, 0));
+        }
     }
 }

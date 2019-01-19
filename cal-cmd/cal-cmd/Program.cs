@@ -13,10 +13,18 @@ namespace cal_cmd
             Control control = new Control();
             control.ControlCore(args);
             //Solve solve = new Solve();
-            //solve.CalCore("((100)+29)");
+            //solve.CalCore("(1-2)/(1-2)");
+            //System.Console.WriteLine(solve.GetValidate());
             //System.Console.WriteLine(solve.GetRes());
-            //System.Console.WriteLine(solve.Check("129"));
-            //solve.CalCore("(17)/52");
+            //solve.CalCore("0+1-3");
+            //System.Console.WriteLine(solve.GetValidate());
+            //System.Console.WriteLine(solve.GetRes());
+            //solve.CalCore("100^100");
+            //System.Console.WriteLine(solve.GetValidate());
+            //System.Console.WriteLine(solve.GetRes());
+            //solve.CalCore("(1 * 3) ^ 2");
+            //System.Console.WriteLine(solve.GetValidate());
+            //System.Console.WriteLine(solve.GetRes());
             //System.Console.WriteLine(solve.GetRes());
             //System.Console.WriteLine(solve.Check("17/52"));
             //ProblemSet set = new ProblemSet();
@@ -212,9 +220,12 @@ namespace cal_cmd
         public List<Problem> Get() { return problem_set; }
         public int GenerateSingle()
         {
+            int fraction = rd.Next(0, 2);//1表示有分数 0表示没有分数
+            int last_num = 0;
+            int last_type = 0;
             Solve cur_solve = new Solve();
             ExpInf cur_inf = new ExpInf();
-            int cnt_num = rd.Next(2, 8);
+            int cnt_num = rd.Next(2, 5);
             cur_inf.cnt_num = cnt_num;
             int cnt_bracket;
             if (cnt_num > 2)
@@ -234,7 +245,7 @@ namespace cal_cmd
             }
             DealBracket(cnt_bracket);
             StringBuilder exp = new StringBuilder();
-            StringBuilder op = new StringBuilder();
+            List<int> op = new List<int>();
             for (int j = 0; j < cnt_bracket; j++)
             {
                 if (bracket_pos[j].left == 0)
@@ -242,17 +253,51 @@ namespace cal_cmd
                     exp.Append("(");
                 }
             }
-            int first_num = rd.Next(1, 101);
+            int first_num;
+            if (fraction == 0)
+            {
+                first_num = rd.Next(1, 21);
+            }
+            else
+            {
+                first_num = rd.Next(1, 11);
+            }
             exp.Append(first_num.ToString());
             cur_inf.num_vis[first_num]++;
             for (int i=1;i<cnt_num;i++)
-            { 
-                int op_num = rd.Next(1, 6);
-                if (op.Length != 0 && op[op.Length - 1] == '^')
+            {
+                int op_num;
+                if (op.Count == 0)
+                {
+                    op_num = rd.Next(1, 5);
+                }
+                else
+                {
+                    if (op[op.Count - 1] > 2)
+                    {
+                        op_num = rd.Next(1, 3);
+                    }
+                    else
+                    {
+                        op_num = rd.Next(1, 6);
+                    }
+                }
+                /*if (op.Length != 0 && op[op.Length - 1] == '^')
                 {
                     while (op_num == 5)
                     {
                         op_num = rd.Next(1, 6);
+                    }
+                }*/
+                if (op_num == 5)
+                {
+                    if (exp[exp.Length - 1] <= '9' && exp[exp.Length - 1] >= '0')
+                    {
+                        exp = exp.Remove(exp.Length - 1, 1);
+                        if(exp[exp.Length - 1] > '9' && exp[exp.Length - 1] < '0')
+                        {
+                            exp.Append('2');
+                        }
                     }
                 }
                 exp.Append(' ');
@@ -266,17 +311,17 @@ namespace cal_cmd
                     {
                         exp.Append("^");
                     }
-                    op.Append('^');
+                    op.Add(5);
                 }
                 else
                 {
                     exp.Append(dic_op[op_num]);
-                    op.Append(dic_op[op_num]);
+                    op.Add(op_num);
                 }
                 exp.Append(' ');
                 for (int j = 0; j < cnt_bracket; j++)
                 {
-                    if(op[op.Length-1]=='^' && bracket_pos[j].left == i)
+                    if(op[op.Count-1]=='^' && bracket_pos[j].left == i)
                     {
                         bracket_pos[j].l_legal = false;
                         bracket_pos[j].r_legal = false;
@@ -291,7 +336,8 @@ namespace cal_cmd
                 {
                     case 5: cur_num = rd.Next(2, 4);break;
                     case 4: cur_num = rd.Next(1, 11);break;
-                    default:cur_num = rd.Next(1, 101);break;
+                    case 3:cur_num = rd.Next(1, 11);break;
+                    default:cur_num = fraction==1?rd.Next(1,11):rd.Next(1, 101);break;
                 }
                 if (op_num == 4 || op_num == 5)
                 {
@@ -301,7 +347,7 @@ namespace cal_cmd
                 else
                 {
                     int type = rd.Next(1, 7);
-                    if (type < 3)
+                    if (type < 3 && fraction == 1)
                     {
                         int de = rd.Next(2, 11);
                         int ne = rd.Next(1, de);
@@ -326,7 +372,7 @@ namespace cal_cmd
             System.Console.WriteLine(exp.ToString());
             cur_solve.CalCore(exp.ToString());
             System.Console.WriteLine(cur_solve.GetRes());
-            if (CheckDup(cur_inf) || CheckOverflow(cur_solve.GetRes()))
+            if (CheckDup(cur_inf) || !cur_solve.GetValidate())
             {
                 return 0;
             }
@@ -390,25 +436,6 @@ namespace cal_cmd
                 }
             }
         }
-        public bool CheckOverflow(string res)
-        {
-            int div_pos = 0;
-            for(int i = 0; i < res.Length; i++)
-            {
-                if (res[i] == '/')
-                {
-                    div_pos = i;
-                    break;
-                }
-            }
-          
-            if (div_pos > 8 || res.Length - div_pos > 8)
-            {
-                return true;
-            }
-            return false;
-           
-        }
     }
     public class Solve
     {
@@ -423,6 +450,7 @@ namespace cal_cmd
         private string res;
         private char[] exp;
         private int length;
+        private bool validate;
         static Dictionary<char, int> dic_pri;
         public Solve()
         {
@@ -431,6 +459,7 @@ namespace cal_cmd
             exp = new char[100];
             length = 0;
             res = "";
+            validate = true;
 
             dic_pri.Add('(', 0);
             dic_pri.Add('+', 1);
@@ -446,8 +475,10 @@ namespace cal_cmd
         {
             return res;
         }
+        public bool GetValidate() { return validate; }
         public void CalCore(string tosolve)
         {
+            validate = true;
             PreTreat(tosolve);
             InfixToPostfix();
             CalPost();
@@ -569,35 +600,55 @@ namespace cal_cmd
         public void CalPost()
         {
             Stack<UniType> st_cal = new Stack<UniType>();
-            while (postfix_exp.Count != 0)
+            try
             {
-                if (postfix_exp.Peek().type == 0)
+                while (postfix_exp.Count != 0)
                 {
-                    st_cal.Push(postfix_exp.Peek());
+                    if (postfix_exp.Peek().type == 0)
+                    {
+                        st_cal.Push(postfix_exp.Peek());
+                    }
+                    else if (postfix_exp.Peek().type == 1 && postfix_exp.Peek().op == 'm')
+                    {
+                        st_cal.Peek().numerator *= -1;
+                    }
+                    else
+                    {
+                        UniType num2 = st_cal.Peek();
+                        st_cal.Pop();
+                        UniType num1 = st_cal.Peek();
+                        st_cal.Pop();
+                        if (postfix_exp.Peek().op == '^' && Math.Abs(num1.numerator) > 6)
+                        {
+                            validate = false;
+                        }
+                        st_cal.Push(Cal(num1, num2, postfix_exp.Peek().op));
+                    }
+                    postfix_exp.Dequeue();
                 }
-                else if (postfix_exp.Peek().type == 1 && postfix_exp.Peek().op == 'm')
+                if (st_cal.Peek().denominator == 0)
                 {
-                    st_cal.Peek().numerator *= -1;
+                    validate = false;
+                }
+                if (Math.Abs(st_cal.Peek().denominator) == 1)
+                {
+                    res = (st_cal.Peek().numerator * st_cal.Peek().denominator).ToString();
                 }
                 else
                 {
-                    UniType num2 = st_cal.Peek();
-                    st_cal.Pop();
-                    UniType num1 = st_cal.Peek();
-                    st_cal.Pop();
-                    st_cal.Push(Cal(num1, num2, postfix_exp.Peek().op));
+                    if (st_cal.Peek().denominator < 0)
+                    {
+                        st_cal.Peek().numerator *= -1;
+                        st_cal.Peek().denominator *= -1;
+                    }
+                    res = st_cal.Peek().numerator.ToString() + "/" + st_cal.Peek().denominator.ToString();
                 }
-                postfix_exp.Dequeue();
+                st_cal.Pop();
             }
-            if (st_cal.Peek().denominator == 1)
+            catch
             {
-                res = st_cal.Peek().numerator.ToString();
+                validate = false;
             }
-            else
-            {
-                res = st_cal.Peek().numerator.ToString() + "/" + st_cal.Peek().denominator.ToString();
-            }
-            st_cal.Pop();
         }
         public UniType Cal(UniType num1, UniType num2,char op)
         {
@@ -606,20 +657,20 @@ namespace cal_cmd
             switch(op)
             {
                 case '+':
-                    sum_denominator = num1.denominator * num2.denominator;
-                    sum_numerator = num1.numerator * num2.denominator + num2.numerator * num1.denominator;
+                    sum_denominator = checked(num1.denominator * num2.denominator);
+                    sum_numerator = checked(num1.numerator * num2.denominator + num2.numerator * num1.denominator);
                     break;
                 case '-':
-                    sum_denominator = num1.denominator * num2.denominator;
-                    sum_numerator = num1.numerator * num2.denominator - num2.numerator * num1.denominator;
+                    sum_denominator = checked(num1.denominator * num2.denominator);
+                    sum_numerator = checked(num1.numerator * num2.denominator - num2.numerator * num1.denominator);
                     break;
                 case '*':
-                    sum_denominator = num1.denominator * num2.denominator;
-                    sum_numerator = num1.numerator * num2.numerator;
+                    sum_denominator = checked(num1.denominator * num2.denominator);
+                    sum_numerator = checked(num1.numerator * num2.numerator);
                     break;
                 case '/':
-                    sum_denominator = num1.denominator * num2.numerator;
-                    sum_numerator = num1.numerator * num2.denominator;
+                    sum_denominator = checked(num1.denominator * num2.numerator);
+                    sum_numerator = checked(num1.numerator * num2.denominator);
                     break;
                 case '^':
                     sum_denominator = MyPow(num1.denominator, num2.numerator);
@@ -645,7 +696,7 @@ namespace cal_cmd
             int res = 1;
             for(int i = 0; i < b; i++)
             {
-                res *= a;
+                res = checked(res * a);
             }
             return res;
         }

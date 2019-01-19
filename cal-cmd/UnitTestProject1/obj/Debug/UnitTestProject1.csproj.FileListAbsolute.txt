@@ -7,5 +7,3 @@ C:\Users\hp\documents\visual studio 2015\Projects\cal-cmd\UnitTestProject1\bin\D
 C:\Users\hp\documents\visual studio 2015\Projects\cal-cmd\UnitTestProject1\bin\Debug\zh-Hans\Microsoft.VisualStudio.QualityTools.UnitTestFramework.resources.dll
 C:\Users\hp\documents\visual studio 2015\Projects\cal-cmd\UnitTestProject1\obj\Debug\UnitTestProject1.dll
 C:\Users\hp\documents\visual studio 2015\Projects\cal-cmd\UnitTestProject1\obj\Debug\UnitTestProject1.pdb
-C:\Users\hp\documents\visual studio 2015\Projects\cal-cmd\UnitTestProject1\bin\Debug\UnitTestProject1.dll.CodeAnalysisLog.xml
-C:\Users\hp\documents\visual studio 2015\Projects\cal-cmd\UnitTestProject1\bin\Debug\UnitTestProject1.dll.lastcodeanalysissucceeded
