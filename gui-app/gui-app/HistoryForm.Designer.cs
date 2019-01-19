@@ -49,11 +49,11 @@
             this.UserNameReadOnly.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.UserNameReadOnly.Cursor = System.Windows.Forms.Cursors.No;
             this.UserNameReadOnly.Font = new System.Drawing.Font("宋体", 15F);
-            this.UserNameReadOnly.Location = new System.Drawing.Point(25, 29);
+            this.UserNameReadOnly.Location = new System.Drawing.Point(12, 29);
             this.UserNameReadOnly.Multiline = true;
             this.UserNameReadOnly.Name = "UserNameReadOnly";
             this.UserNameReadOnly.ReadOnly = true;
-            this.UserNameReadOnly.Size = new System.Drawing.Size(102, 43);
+            this.UserNameReadOnly.Size = new System.Drawing.Size(115, 43);
             this.UserNameReadOnly.TabIndex = 0;
             this.UserNameReadOnly.Text = "用户名：";
             // 
@@ -165,6 +165,7 @@
             this.Controls.Add(this.UserNameText);
             this.Controls.Add(this.UserNameReadOnly);
             this.Name = "HistoryForm";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "答题历史记录";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.HistoryForm_FormClosing);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();

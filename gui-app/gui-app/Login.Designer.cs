@@ -69,9 +69,9 @@
             // 
             this.button1.Cursor = System.Windows.Forms.Cursors.No;
             this.button1.Image = global::gui_app.Properties.Resources.smallPerson;
-            this.button1.Location = new System.Drawing.Point(234, 230);
+            this.button1.Location = new System.Drawing.Point(234, 217);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(79, 54);
+            this.button1.Size = new System.Drawing.Size(79, 63);
             this.button1.TabIndex = 0;
             this.button1.UseVisualStyleBackColor = true;
             // 
@@ -79,10 +79,10 @@
             // 
             this.textBox4.BackColor = System.Drawing.SystemColors.ScrollBar;
             this.textBox4.Font = new System.Drawing.Font("宋体", 30F);
-            this.textBox4.Location = new System.Drawing.Point(313, 231);
+            this.textBox4.Location = new System.Drawing.Point(313, 218);
             this.textBox4.Multiline = true;
             this.textBox4.Name = "textBox4";
-            this.textBox4.Size = new System.Drawing.Size(377, 53);
+            this.textBox4.Size = new System.Drawing.Size(377, 62);
             this.textBox4.TabIndex = 0;
             this.textBox4.UseSystemPasswordChar = true;
             // 
@@ -90,11 +90,11 @@
             // 
             this.textBox3.BackColor = System.Drawing.SystemColors.ScrollBar;
             this.textBox3.Font = new System.Drawing.Font("宋体", 30F);
-            this.textBox3.Location = new System.Drawing.Point(313, 321);
+            this.textBox3.Location = new System.Drawing.Point(313, 301);
             this.textBox3.Multiline = true;
             this.textBox3.Name = "textBox3";
             this.textBox3.PasswordChar = '*';
-            this.textBox3.Size = new System.Drawing.Size(377, 53);
+            this.textBox3.Size = new System.Drawing.Size(377, 63);
             this.textBox3.TabIndex = 0;
             this.textBox3.TextChanged += new System.EventHandler(this.textBox3_TextChanged);
             // 
@@ -102,9 +102,9 @@
             // 
             this.button2.Cursor = System.Windows.Forms.Cursors.No;
             this.button2.Image = global::gui_app.Properties.Resources.Key;
-            this.button2.Location = new System.Drawing.Point(234, 320);
+            this.button2.Location = new System.Drawing.Point(234, 301);
             this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(79, 54);
+            this.button2.Size = new System.Drawing.Size(79, 63);
             this.button2.TabIndex = 0;
             this.button2.UseVisualStyleBackColor = true;
             // 
