@@ -5,6 +5,13 @@ VisualStudioVersion = 15.0.28307.136
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gui-app", "gui-app\gui-app.csproj", "{48A03A44-C39C-485A-932D-1FDE697F4AAC}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{E969A405-C771-4457-9ED4-9801B6B72423}"
+	ProjectSection(SolutionItems) = preProject
+		gui-app\Login.cs = gui-app\Login.cs
+		gui-app\Login.Designer.cs = gui-app\Login.Designer.cs
+		gui-app\Login.resx = gui-app\Login.resx
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

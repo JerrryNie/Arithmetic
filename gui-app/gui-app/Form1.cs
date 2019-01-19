@@ -9,17 +9,19 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Threading;
 using System.Text.RegularExpressions;
+//using CCWin;
 
 namespace gui_app
 {
     public partial class Form1 : Form
     {
-        public Form1()
+        public Form1(String usrName)
         {
             InitializeComponent();
 
             GenerateProbSignal(ProbNum);//Controller部分的接口，用于向逻辑部分发送生成特定题目数量的要求
-            String Str = "心痛到无法呼吸";
+            String Str = "即将开始答题";
+            UserRecords = new RecordSet(usrName);//新建立一个数据集，记录历史记录信息
             QuestionText.Text = Str;
             //计时器属性初始化
             timer1.Interval = 1000;//每隔1m，触发一次ticker函数
@@ -30,8 +32,13 @@ namespace gui_app
             ConfirmAnsButton.Visible = false;
         }
 
+        public void setUsrName(String usrname)
+        {
+            UserRecords.UserName = usrname;
+        }
         const int ProbNum = 1000;//默认产生1000道题，并通过逻辑部分写入文件
 
+        
         private const int MaxThinkTime = 20;//做题的最大时间限
         private int Timecnt = 0;//用来记录做题总时间
         private int QuesCnt = 0;//用来记录总的答题数

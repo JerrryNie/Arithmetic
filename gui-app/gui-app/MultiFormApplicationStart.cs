@@ -12,24 +12,24 @@ public class MultiFormApplicationStart : ApplicationContext
     public MultiFormApplicationStart()
     {
         //建立关于所有窗体的对象
-        var MainFormObj = new Form1();
-        
 
-        MainFormObj.FormClosed += onFormClosed;
+        var MainObj = new Form1("");
+        var LoginFormObj = new Login(MainObj);
+        LoginFormObj.FormClosed += onFormClosed;
+        MainObj.FormClosed += onFormClosed;
        // HistoryFormObj.FormClosed += onFormClosed;
 
-        MainFormObj.Show();//先显示主界面
+        LoginFormObj.Show();//先显示主界面
     }
     private void onFormClosed(object sender, EventArgs e)
     {
-        if (Application.OpenForms.Count == 0)
+        if (Application.OpenForms.Count == 1)
         {//当所有的窗口都关闭后，关闭此线程
-            ExitThread();
+                //MainFormObj = null;
+                ExitThread();
         }
     
     }
-
-    
-    
+   
 };
 }

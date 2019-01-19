@@ -323,9 +323,9 @@ namespace cal_cmd
                     }
                 }
             }
-            System.Console.WriteLine(exp.ToString());
+            //System.Console.WriteLine(exp.ToString());
             cur_solve.CalCore(exp.ToString());
-            System.Console.WriteLine(cur_solve.GetRes());
+            //System.Console.WriteLine(cur_solve.GetRes());
             if (CheckDup(cur_inf) || CheckOverflow(cur_solve.GetRes()))
             {
                 return 0;

@@ -8,12 +8,23 @@ namespace gui_app
 {
     public class RecordSet
     {//RecordSet聚合单个用户的所有单条Record
-        private String userName = "隔壁老王";//用户名称, 只能在初始化的时候赋值
+        private String userName;//用户名称, 只能在初始化的时候赋值
+
+        public RecordSet(String usrName = "隔壁老王")
+        {
+            userName = usrName;
+        }
         public String UserName
         {
             get
             {
                 return userName;
+            }
+            set
+            {
+                if(value != "") { 
+                    userName = value;
+                }
             }
         }
         private int recordNum = 0;//默认初始记录数为0,此属性只能在类内部修改，外部只读
