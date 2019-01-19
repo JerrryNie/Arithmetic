@@ -118,5 +118,20 @@
   <ItemGroup>
     <None Include="Resources\Cloud.JPG" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BackGround.JPG" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BackGroundv2.JPG" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BackGroundv3.JPG" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BackGroundv4.JPG" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Button.JPG" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -107,7 +107,7 @@ namespace gui_app
         {//用来修改正向计时
             Timecnt++;
             String Str = Timecnt.ToString();
-            TimeCnt.Text = Str + "秒";
+            TimeCnt1.Text = Str + "秒";
         }
         int CountDownCnt = MaxThinkTime;
         private void timer2_Tick(object sender, EventArgs e)
@@ -267,6 +267,11 @@ namespace gui_app
         {//接口方法：用于在主界面类与历史记录界面类之间传递单条历史记录，从历史记录类中提供单条历史记录，此方法返回相应的记录
             Record r = UserRecords.Records_r[idx];
             return r;
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+
         }
     }
 }
