@@ -273,5 +273,19 @@ namespace gui_app
         {
 
         }
+
+        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if(comboBox1.SelectedIndex == 0)
+            {//**
+                String QText = QuestionText.Text;
+                QuestionText.Text = QText.Replace("^", "**");
+            }
+            else if(comboBox1.SelectedIndex == 1)
+            {//^
+                String QText = QuestionText.Text;
+                QuestionText.Text = QText.Replace("**", "^");
+            }
+        }
     }
 }

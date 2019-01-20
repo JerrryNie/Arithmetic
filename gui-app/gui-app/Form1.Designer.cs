@@ -45,6 +45,7 @@
             this.panel1 = new System.Windows.Forms.Panel();
             this.TimeCnt1 = new System.Windows.Forms.TextBox();
             this.panel2 = new System.Windows.Forms.Panel();
+            this.comboBox1 = new System.Windows.Forms.ComboBox();
             TextReadOnly2 = new System.Windows.Forms.TextBox();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
@@ -205,6 +206,7 @@
             // 
             this.panel1.BackColor = System.Drawing.Color.Ivory;
             this.panel1.BackgroundImage = global::gui_app.Properties.Resources.BackGround1;
+            this.panel1.Controls.Add(this.comboBox1);
             this.panel1.Controls.Add(this.TimeCnt1);
             this.panel1.Controls.Add(this.TextReadOnly4);
             this.panel1.Controls.Add(this.TextReadOnly3);
@@ -243,6 +245,19 @@
             this.panel2.Size = new System.Drawing.Size(799, 451);
             this.panel2.TabIndex = 13;
             // 
+            // comboBox1
+            // 
+            this.comboBox1.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBox1.FormattingEnabled = true;
+            this.comboBox1.Items.AddRange(new object[] {
+            "阶乘：**",
+            "阶乘：^"});
+            this.comboBox1.Location = new System.Drawing.Point(97, 332);
+            this.comboBox1.Name = "comboBox1";
+            this.comboBox1.Size = new System.Drawing.Size(166, 41);
+            this.comboBox1.TabIndex = 13;
+            this.comboBox1.SelectedIndexChanged += new System.EventHandler(this.comboBox1_SelectedIndexChanged);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
@@ -279,6 +294,7 @@
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.TextBox TimeCnt1;
+        private System.Windows.Forms.ComboBox comboBox1;
     }
 }
 
