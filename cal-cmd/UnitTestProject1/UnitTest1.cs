@@ -119,7 +119,7 @@ namespace UnitTestProject1
         public void TestGCD3()
         {
             Solve solve = new Solve();
-            Assert.AreEqual(1, solve.gcd(15, 0));
+            Assert.AreEqual(15, solve.gcd(15, 0));
         }
     }
 }

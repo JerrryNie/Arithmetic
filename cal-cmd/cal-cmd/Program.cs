@@ -6,37 +6,34 @@ using System.Threading.Tasks;
 using System.IO;
 namespace cal_cmd
 {
+    //主控模块，程序入口
     class Program
     {
         static void Main(string[] args)
         {
             Control control = new Control();
             control.ControlCore(args);
-            //Solve solve = new Solve();
-            //solve.CalCore("(1-2)/(1-2)");
-            //System.Console.WriteLine(solve.GetValidate());
-            //System.Console.WriteLine(solve.GetRes());
-            //solve.CalCore("0+1-3");
-            //System.Console.WriteLine(solve.GetValidate());
-            //System.Console.WriteLine(solve.GetRes());
-            //solve.CalCore("100^100");
-            //System.Console.WriteLine(solve.GetValidate());
-            //System.Console.WriteLine(solve.GetRes());
-            //solve.CalCore("(1 * 3) ^ 2");
-            //System.Console.WriteLine(solve.GetValidate());
-            //System.Console.WriteLine(solve.GetRes());
-            //System.Console.WriteLine(solve.GetRes());
-            //System.Console.WriteLine(solve.Check("17/52"));
-            //ProblemSet set = new ProblemSet();
-            //set.Generate(1000);
         }
     }
+    //控制模块，接收参数并调用相应功能的核心模块
     public class Control
     {
-        private int num = 0;
-        private int error_flag = 0;
-        private int pow_type = 0;
+        private int num = 0;            //生成题目的数量
+        private int error_flag = 0;     //错误类型，0表示正确，1表示生成数量不是正整数
+                                        //2表示文件打开失败，3表示乘方符号类型错误，4表示其他错误
+        private int pow_type = 0;       //乘方符号类型
+        /**************************************************/
+        /*描述：获取错误类型
+        /*参数：无
+        /*返回值：int，具体含义参看error_flag
+        /***************************************************/
         public int GetError() { return error_flag; }
+        /**************************************************/
+        /*描述：接收参数并调用相关功能模块
+        /*参数：
+        /* 参数1：参数名称 args、参数类型 string[]、参数含义：从命令行接受的参数
+        /*返回值：无
+        /***************************************************/
         public void ControlCore(string[] args)
         {
             if (args.Length == 4 && args[0] == "-g")
@@ -109,6 +106,12 @@ namespace cal_cmd
                 System.Console.WriteLine("参数存在未知错误");
             }
         }
+        /**************************************************/
+        /*描述：检查数字是否为正整数
+        /*参数：
+        /* 参数1：参数名称 num、参数类型 string、参数含义：表示数字的字符串
+        /*返回值：bool，1表示合法，0表示不合法
+        /***************************************************/
         public bool CheckNum(string num)
         {
             for (int i = 0; i < num.Length; i++)
@@ -120,6 +123,12 @@ namespace cal_cmd
             }
             return true;
         }
+        /**************************************************/
+        /*描述：检查参数是否合法
+        /*参数：
+        /* 参数1：参数名称 args、参数类型 string[]、参数含义：从命令行接受的参数
+        /*返回值：bool，1表示合法，0表示不合法
+        /***************************************************/
         public bool CheckArg(string[] args)
         {
             if (CheckNum(args[1]))
@@ -155,40 +164,43 @@ namespace cal_cmd
             return true;
         }
     }
+    //问题类，存放算式的string
     public class Problem
     {
         private string expression;
+
         public string Get() { return expression; }
         public void Set(string content) { expression = content; }
         public Problem() { expression = ""; }
         public Problem(string res_exp) { expression = res_exp; }
     }
+    //题目集合类，存放所有题目及生成
     public class ProblemSet
     {
-        private List<Problem> problem_set;
+        private List<Problem> problem_set;          //存放题目的集合
+        //内部类，记录括号的相关信息
         private class BracketPos
         {
-            public int left = 0;
-            public int right = 0;
-            public bool l_legal = true;
-            public bool r_legal = true;
+            public int left = 0;            //左括号位置
+            public int right = 0;           //右括号位置
+            public bool l_legal = true;     //左括号是否输出
+            public bool r_legal = true;     //右括号是否输出
         }
+        //内部类，记录已出现过的数字组合
         private class ExpInf
         {
-            public int cnt_num = 0;
-            public int[] num_vis = new int[101]; 
+            public int cnt_num = 0;                //该表达式的数字个数
+            public int[] num_vis = new int[101];   //该表达式数字出现的情况
         }
-        private BracketPos[] bracket_pos;
-        private int[] pow_pos = new int[5];
-        static Dictionary<int, char> dic_op;
-        private List<ExpInf> inf_set;
-        private Random rd;
-        private int pow_type;
+        private BracketPos[] bracket_pos;           //存放括号信息
+        static Dictionary<int, char> dic_op;        //存放操作符对应的数字
+        private List<ExpInf> inf_set;               //存放数字信息
+        private Random rd;                          //随机数生成器
+        private int pow_type;                       //乘方类型
         public ProblemSet()
         {
             problem_set = new List<Problem>();
             bracket_pos = new BracketPos[10];
-            pow_pos = new int[5];
             dic_op = new Dictionary<int, char>();
             inf_set = new List<ExpInf>();
             rd = new Random();
@@ -209,25 +221,35 @@ namespace cal_cmd
         {
             pow_type = p_pow_type;
         }
+        /**************************************************/
+        /*描述：生成n个表达式
+        /*参数：
+        /* 参数1：参数名称 n、参数类型 int、参数含义：生成题目的个数
+        /*返回值：无
+        /***************************************************/
         public void Generate(int n)
         {
             int cnt_problem = 0;
+            //若有不合法表达式不计数
             while(cnt_problem<n)
             {
                 cnt_problem += GenerateSingle();
             }
         }
         public List<Problem> Get() { return problem_set; }
+        /**************************************************/
+        /*描述：生成单个表达式
+        /*参数：无
+        /*返回值：int，1表示合法，0表示不合法
+        /***************************************************/
         public int GenerateSingle()
         {
-            int fraction = rd.Next(0, 2);//1表示有分数 0表示没有分数
-            int last_num = 0;
-            int last_type = 0;
+            int fraction = rd.Next(0, 2);   //1表示有分数 0表示没有分数
             Solve cur_solve = new Solve();
             ExpInf cur_inf = new ExpInf();
-            int cnt_num = rd.Next(2, 5);
+            int cnt_num = rd.Next(2, 5);    //每个表达式包含2-5个数字
             cur_inf.cnt_num = cnt_num;
-            int cnt_bracket;
+            int cnt_bracket;                //括号个数
             if (cnt_num > 2)
             {
                 cnt_bracket = rd.Next(1, Math.Min(3, cnt_num));
@@ -253,6 +275,7 @@ namespace cal_cmd
                     exp.Append("(");
                 }
             }
+            //若有分数限定运算数的大小
             int first_num;
             if (fraction == 0)
             {
@@ -273,6 +296,7 @@ namespace cal_cmd
                 }
                 else
                 {
+                    //避免出现连续乘除法及乘方的情况
                     if (op[op.Count - 1] > 2)
                     {
                         op_num = rd.Next(1, 3);
@@ -282,13 +306,7 @@ namespace cal_cmd
                         op_num = rd.Next(1, 6);
                     }
                 }
-                /*if (op.Length != 0 && op[op.Length - 1] == '^')
-                {
-                    while (op_num == 5)
-                    {
-                        op_num = rd.Next(1, 6);
-                    }
-                }*/
+                //限定指数大小
                 if (op_num == 5)
                 {
                     if (exp[exp.Length - 1] <= '9' && exp[exp.Length - 1] >= '0')
@@ -332,6 +350,7 @@ namespace cal_cmd
                     }
                 }
                 int cur_num = 0;
+                //根据运算符限定操作数大小以简化题目
                 switch (op_num)
                 {
                     case 5: cur_num = rd.Next(2, 4);break;
@@ -369,9 +388,8 @@ namespace cal_cmd
                     }
                 }
             }
-            System.Console.WriteLine(exp.ToString());
+            //判断表达式是否合法
             cur_solve.CalCore(exp.ToString());
-            System.Console.WriteLine(cur_solve.GetRes());
             if (CheckDup(cur_inf) || !cur_solve.GetValidate())
             {
                 return 0;
@@ -384,11 +402,18 @@ namespace cal_cmd
                 return 1;
             }
         }
+        /**************************************************/
+        /*描述：查重
+        /*参数：
+        /* 参数1：参数名称 cur_inf、参数类型 ExpInf、参数含义：当前表达式的信息
+        /*返回值：bool，1表示合法，0表示不合法
+        /***************************************************/
         private bool CheckDup(ExpInf cur_inf)
         {
             foreach (ExpInf inf in inf_set)
             {
                 bool flag = true;
+                //数字个数不等肯定不重复
                 if (inf.cnt_num != cur_inf.cnt_num)
                 {
                     continue;
@@ -408,8 +433,15 @@ namespace cal_cmd
             }
             return false;
         }
+        /**************************************************/
+        /*描述：检查括号是否合法
+        /*参数：
+        /* 参数1：参数名称 cnt_bracket、参数类型 int、参数含义：括号个数
+        /*返回值：bool，1表示合法，0表示不合法
+        /***************************************************/
         public void DealBracket(int cnt_bracket)
         {
+            //避免同一个表达式两侧有多个括号
             for(int i = 0; i < cnt_bracket; i++)
             {
                 for(int j = i+1; j < cnt_bracket; j++)
@@ -422,6 +454,7 @@ namespace cal_cmd
                     }
                 }
             }
+            //避免单个数字两侧有括号
             for (int i = 0; i < cnt_bracket; i++)
             {
                 for (int j = 0; j < cnt_bracket; j++)
@@ -437,21 +470,23 @@ namespace cal_cmd
             }
         }
     }
+    //求解类
     public class Solve
     {
+        //内部类，统一表示运算符和运算数
         public class UniType
         {
-            public int type = 0;
-            public char op = '+';
-            public int numerator = 0;
-            public int denominator = 1;
+            public int type = 0;            //类型，0表示操作数，1表示操作符
+            public char op = '+';           //操作符 默认为加号
+            public int numerator = 0;       //分子，默认为0
+            public int denominator = 1;     //分母，默认为1
         }
-        private Queue<UniType> postfix_exp;
-        private string res;
-        private char[] exp;
-        private int length;
-        private bool validate;
-        static Dictionary<char, int> dic_pri;
+        private Queue<UniType> postfix_exp;     //后缀表达式
+        private string res;                     //计算结果
+        private char[] exp;                     //原始表达式
+        private int length;                     //表达式长度
+        private bool validate;                  //是否合法
+        static Dictionary<char, int> dic_pri;   //运算符优先级的映射
         public Solve()
         {
             postfix_exp = new Queue<UniType>();
@@ -476,6 +511,12 @@ namespace cal_cmd
             return res;
         }
         public bool GetValidate() { return validate; }
+        /**************************************************/
+        /*描述：计算的控制模块，调用中缀转后缀，计算等功能
+        /*参数：
+        /* 参数1：参数名称 tosolve、参数类型 string、参数含义：待计算的表达式
+        /*返回值：bool，1表示合法，0表示不合法
+        /***************************************************/
         public void CalCore(string tosolve)
         {
             validate = true;
@@ -484,11 +525,18 @@ namespace cal_cmd
             CalPost();
             Reset();
         }
+        /**************************************************/
+        /*描述：预处理
+        /*参数：
+        /* 参数1：参数名称 init_exp、参数类型 string、参数含义：原始表达式
+        /*返回值：无
+        /***************************************************/
         public void PreTreat(string init_exp)
         {
             int idx_exp = 0;
             for (int i = 0; i < init_exp.Length; i++)
             {
+                //去除所有空格
                 if (init_exp[i] == ' ')
                 {
                     continue;
@@ -507,6 +555,7 @@ namespace cal_cmd
                 }
                 if (init_exp[i] == '*')
                 {
+                    //乘方统一用^表示
                     if (init_exp[i + 1] == '*')
                     {
                         exp[idx_exp++] = '^';
@@ -522,12 +571,18 @@ namespace cal_cmd
             }
             length = idx_exp;
         }
+        /**************************************************/
+        /*描述：中缀转后缀
+        /*参数：无
+        /*返回值：bool，1表示合法，0表示不合法
+        /***************************************************/
         public void InfixToPostfix()
         {
             int idx = 0;
             Stack<UniType> op_sign = new Stack<UniType>();
             while (idx < length)
             {
+                //如果当前处理的为运算符
                 if (exp[idx] > '9' || exp[idx] < '0')
                 {
                     UniType cur = new UniType();
@@ -536,6 +591,7 @@ namespace cal_cmd
 
                     while (true)
                     {
+                        //乘方为右结合，需要单独处理
                         if (exp[idx] == '^')
                         {
                             if (op_sign.Count == 0 || dic_pri[exp[idx]] >= dic_pri[op_sign.Peek().op])
@@ -571,6 +627,7 @@ namespace cal_cmd
                     }
                     idx++;
                 }
+                //如果当前处理的为操作数
                 else
                 {
                     int sum = exp[idx++] - '0';
@@ -585,6 +642,7 @@ namespace cal_cmd
                     postfix_exp.Enqueue(cur);
                 }
             }
+            //将操作符栈的剩余内容输出
             while (op_sign.Count != 0)
             {
                 postfix_exp.Enqueue(op_sign.Peek());
@@ -597,6 +655,11 @@ namespace cal_cmd
             if (x < y) return gcd(y, x);
             else return gcd(y, x % y);
         }
+        /**************************************************/
+        /*描述：计算后缀表达式
+        /*参数：无
+        /*返回值：无
+        /***************************************************/
         public void CalPost()
         {
             Stack<UniType> st_cal = new Stack<UniType>();
@@ -604,14 +667,17 @@ namespace cal_cmd
             {
                 while (postfix_exp.Count != 0)
                 {
+                    //如果当前读取的是操作数直接入站
                     if (postfix_exp.Peek().type == 0)
                     {
                         st_cal.Push(postfix_exp.Peek());
                     }
+                    //对于操作符，如果是负号（不是减法），直接运算
                     else if (postfix_exp.Peek().type == 1 && postfix_exp.Peek().op == 'm')
                     {
                         st_cal.Peek().numerator *= -1;
                     }
+                    //否则按规则进行运算
                     else
                     {
                         UniType num2 = st_cal.Peek();
@@ -626,10 +692,12 @@ namespace cal_cmd
                     }
                     postfix_exp.Dequeue();
                 }
+                //除零为不合法情况
                 if (st_cal.Peek().denominator == 0)
                 {
                     validate = false;
                 }
+                //根据最后结果的分母是否为1以及分子分母的正负性调整结果
                 if (Math.Abs(st_cal.Peek().denominator) == 1)
                 {
                     res = (st_cal.Peek().numerator * st_cal.Peek().denominator).ToString();
@@ -650,6 +718,14 @@ namespace cal_cmd
                 validate = false;
             }
         }
+        /**************************************************/
+        /*描述：两个数运算
+        /*参数：
+        /* 参数1：参数名称 num1、参数类型 UniType、参数含义：操作数1
+        /* 参数2：参数名称 num2、参数类型 UniType、参数含义：操作数2
+        /* 参数3：参数名称 op、参数类型 char、参数含义：操作符
+        /*返回值：bool，1表示合法，0表示不合法
+        /***************************************************/
         public UniType Cal(UniType num1, UniType num2,char op)
         {
             int sum_numerator = 1;
