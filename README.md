@@ -32,4 +32,4 @@ C sharp
 
 ## 使用说明
 
-详细的使用说明见博客：https://blog.csdn.net/qq_16603365/article/details/86559439
+详细的使用说明见博客：https://blog.csdn.net/qq_16603365/article/details/86559439 中“5. 界面部分操作流程介绍”
