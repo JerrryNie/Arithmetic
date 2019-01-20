@@ -8,7 +8,7 @@
 
 ## 答题界面
 
-![image](https://github.com/JerrryNie/Arithmetic/blob/gui-app/gui-app/gui-app/Resources/EditBackGround.JPG)
+![image](https://github.com/JerrryNie/Arithmetic/blob/gui-app/gui-app/gui-app/Resources/EditBackGround2.JPG)
 
 ## 历史记录界面
 
