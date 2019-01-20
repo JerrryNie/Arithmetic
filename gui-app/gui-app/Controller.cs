@@ -11,11 +11,10 @@ namespace controller
     {//这里的Controller用作控制器，作为GUI和Algorithm之间的桥梁，设置成单粒模式
         private cal_cmd.ProblemSet pPrblemSet = null;
         private List<cal_cmd.Problem> problem_set = null;//问题对象的集合
-        private cal_cmd.Solve solver = null;
         private Controller()
         {
             pPrblemSet = new cal_cmd.ProblemSet();//建立一个关于问题集的类
-            solver = new cal_cmd.Solve();//生成一个新的Solve对象，用于求解题目
+            //solver = new cal_cmd.Solve();//生成一个新的Solve对象，用于求解题目
         }
         private static Controller pController = null;//Controller的指针
         public static Controller GetInstance()
